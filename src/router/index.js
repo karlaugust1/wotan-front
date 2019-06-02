@@ -47,7 +47,7 @@ export default new Router({
     { path: '/coordenador/disciplinas/cadastro/:id', name: 'DisciplinasEdicao', component: DisciplinasCadastro, props: true},
     /* Estudantes (Disciplina) */
     { path: '/coordenador/estudantes', name: 'EstudantesDisciplina', component: EstudantesDisciplina },
-    { path: '/coordenador/estudantes/vincular', name: 'EstudantesVincular', component: EstudantesVincular },
+    { path: '/coordenador/estudantes/vincular/:id', name: 'EstudantesVincular', component: EstudantesVincular, props: true },
     /* Professores (Disciplina) */
     { path: '/coordenador/professores', name: 'ProfessoresDisciplina', component: ProfessoresDisciplina },
     { path: '/coordenador/professores/vincular', name: 'ProfessoresVincular', component: ProfessoresVincular },

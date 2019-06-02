@@ -24,14 +24,15 @@
                         :titles="['Não vinculados', 'Vinculados']"
                         :button-texts="['Desvincular', 'Vincular']"
                         filterable
-                        :filter-method="filtro"
                         filter-placeholder="Nome"
                         v-model="estudantesVinculados"
                         :data="estudantesNaoVinculados">
                     </el-transfer>
                     <el-row>
-                        <el-button type="info" plain>Cancelar</el-button>
-                        <el-button type="success" plain>Salvar</el-button>
+                        <router-link :to="{ name: 'EstudantesDisciplina'}">
+                            <el-button type="info" plain>Cancelar</el-button>
+                        </router-link>
+                        <el-button type="success" plain @click="save">Salvar</el-button>
                     </el-row>  
                 </el-row>
             </div>
@@ -40,27 +41,82 @@
 </template>
 
 <script>
+var moment = require('moment')
+/* Services  */
+import EstudanteService from "../../../../domain/service/EstudanteService";
+import DisciplinaService from "../../../../domain/service/DisciplinaService";
+
 export default {
     data() {
-        /* Apagar */
-        const generateData = _ => {
-            const estudantesNaoVinculados = [];
-            const estudantes = ['Karl', 'Alisson'];
-            estudantes.forEach((estudante, index) => {
-                estudantesNaoVinculados.push({
-                    label: estudante,
-                    key: index,
-                });
-            });
-            return estudantesNaoVinculados;
-        };
         return {
-            estudantesNaoVinculados: generateData(),
             estudantesVinculados: [],
-            filtro(query, item) {
-                return item.label.toLowerCase().indexOf(query.toLowerCase()) > -1;
-            }
-        };
+            estudantesNaoVinculados: [],
+            moment: moment
+        }
+    },
+    created(){
+        if(this.$route.params.id){
+            this.findStudentsWithNoLink()
+        }
+    },
+    methods:{
+        findStudentsWithLink(id, startIndex){
+            this.service = new EstudanteService(this.$resource);
+            this.service.findStudentsWithLink({id: id}).then(response => {
+                if(response.status == 200){
+                    response.body.estudantes.forEach((estudante, index) => {
+                        this.estudantesNaoVinculados.push({
+                            label: estudante.nome + ' | ' + estudante.matricula,
+                            key: startIndex + index,
+                            estudante: estudante
+                        });
+                        this.estudantesVinculados.push(startIndex + index)
+                    });
+                }
+            }).catch( erro => {
+                console.log(erro)
+            })
+        },
+        findStudentsWithNoLink(){
+            this.service = new EstudanteService(this.$resource);
+            this.service.findStudentsWithNoLink().then(response => {
+                if(response.status == 200){
+                    response.body.estudantes.forEach((estudante, index) => {
+                        this.estudantesNaoVinculados.push({
+                            label: estudante.nome + ' | ' + estudante.matricula,
+                            key: index,
+                            estudante: estudante
+                        });
+                    });
+                    this.findStudentsWithLink(this.$route.params.id, this.estudantesNaoVinculados.length)
+                }
+            }).catch( erro => {
+                console.log(erro)
+            })
+        },
+        save(){
+            var estudantes = []
+            this.estudantesVinculados.forEach( index => {
+                var estudanteCopy = Object.assign({}, this.estudantesNaoVinculados.filter( ev => ev.key == index)[0].estudante)
+                estudanteCopy.dataMatricula = new Date(moment(estudanteCopy.dataMatricula, "DD/MM/YYYY HH:ss").format("MM-DD-YYYY HH:ss"))
+                estudanteCopy.dataNascimento = new Date(moment(estudanteCopy.dataNascimento, "DD/MM/YYYY HH:ss").format("MM-DD-YYYY HH:ss"))
+                estudantes.push(estudanteCopy)
+            })
+            console.log(estudantes)
+            var id = this.$route.params.id
+            this.service = new DisciplinaService(this.$resource);
+            this.service.vincularEstudantes({id: id}, estudantes).then(response => {
+                console.log(response)
+                if(response.status == 200){
+                    this.$root.success(response.body.message)
+                } else {
+                    this.$root.error(response.body.message)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
+        }
     }
 }
 </script>

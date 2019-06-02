@@ -36,7 +36,8 @@
                                 </el-row>
                                 <el-table :data="props.row.professores.filter(data => !search || data.nome.toLowerCase().includes(search.toLowerCase()))" style="width: 100%">
                                     <el-table-column label="Nome" prop="nome"></el-table-column>
-                                    <el-table-column label="Data inicio" prop="dataInicio"></el-table-column>
+                                    <el-table-column label="RG" prop="rg"></el-table-column>
+                                    <el-table-column label="CPF" prop="cpf"></el-table-column>
                                 </el-table>
                             </template>
                         </el-table-column>
@@ -57,26 +58,27 @@
 </template>
 
 <script>
+/* Services */
+import DisciplinaService from "../../../../domain/service/DisciplinaService";
+
 export default {
     data(){
         return {
-            disciplinas: [{
-                id: 1,
-                descricao: 'Rede de computadores',
-                curso: 'Analise de sistemas',
-                professores: [{
-                    id: 1,
-                    nome: 'Vinicius Hein Pessoal',
-                    dataInicio: '2019-04-20',
-                },{
-                    id: 2,
-                    nome: 'Karl August Harder',
-                    dataInicio: '2019-04-22',
-                }]
-            }],
-            search: ''
+            disciplinas: [],
+            search: ''  
         }
     },
+    created(){
+        this.service = new DisciplinaService(this.$resource);
+        this.service.findAll().then(response => {
+            console.log(response)
+            if(response.status == 200){
+                this.disciplinas = response.body.disciplinas
+            }
+        }).catch( erro => {
+            console.log(erro)
+        })
+    },  
 }
 </script>
 

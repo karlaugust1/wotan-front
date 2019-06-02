@@ -64,6 +64,15 @@ input[type="textarea"]::-webkit-input-placeholder {
 .el-select{
     width: 100% !important;
 }
+
+.el-date-editor.el-input.el-input--prefix.el-input--suffix.el-date-editor--date{
+    width: 100%;
+}
+
+.text-color-green {
+    font-weight: bold;
+    color: #67C23A;
+}
 /* Fim - Geral */
 
 /* Inicio - Perguntas Cadastro */
@@ -71,7 +80,7 @@ input[type="textarea"]::-webkit-input-placeholder {
     display: block;
 }
 .alternativas .el-input{
-    width: 95%;
+    width: 92%;
 }
 /* Fim - Perguntas Cadastro */
 

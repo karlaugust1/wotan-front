@@ -43,7 +43,7 @@
                         <el-table-column width="68px">
                             <template slot-scope="props" >
                                 <el-tooltip class="item" effect="dark" content="Excluir" placement="top">
-                                    <el-button type="danger" plain style="float: right;" @click="removerProfessor(props.row.id)"><i class="el-icon-delete"></i></el-button>
+                                    <el-button type="danger" plain style="float: right;" @click="remove(props.row)"><i class="el-icon-delete"></i></el-button>
                                 </el-tooltip>
                             </template>
                         </el-table-column>
@@ -55,26 +55,50 @@
 </template>
 
 <script>
+/* Services */
+import ProfessorService from '../../../domain/service/ProfessorService';
+
 export default {
     data(){
         return {
-            professores: [{
-                id: 1,
-                nome: 'Vinicius Hein Pessoal',
-                disciplinas: [{
-                    descricao: 'Suicídio em coletivo',
-                },{
-                    descricao: 'Matemática financeira'
-                }
-
-                ]
-            }]
+            professores: []
         }
     },
-    methods:{
-        removerProfessor(id){
-            var index = this.professores.indexOf(this.professores.filter(p => p.id == id));
-            this.professores.splice(index, 1)
+    created(){
+        this.service = new ProfessorService(this.$resource);
+        this.service.findAll().then(response => {
+            console.log(response)
+            if(response.status == 200){
+                this.professores = response.body.professores
+            }
+        }).catch( erro => {
+            console.log(erro)
+        })  
+    },
+    methods:{   
+        remove(professor){
+            professor.dataMatricula = new Date()
+            professor.dataNascimento = new Date()
+            this.$confirm('Isso fará com que o professor seja deletado permanentemente. Continuar?', 'Atenção', {
+                confirmButtonText: 'Deletar',
+                cancelButtonText: 'Cancelar',
+                type: 'warning'
+            }).then(() => {
+                this.delete(professor)
+            })
+        },
+        delete(professor){
+            this.service = new ProfessorService(this.$resource);
+            this.service.delete({}, professor).then(response => {
+                if(response.status == 200){
+                    this.$root.success(response.body.message)
+                    var index = this.professores.indexOf(this.professores.filter(e => e.id == professor.id));
+                    this.professores.splice(index, 1)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
         }
     }
 }

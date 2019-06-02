@@ -26,6 +26,7 @@
                         style="width: 100%">
                         <el-table-column type="expand">
                             <template slot-scope="props">
+                                <strong><label style="display: block;">Descrição</label></strong>
                                 <p>{{ props.row.descricao }}</p>
                             </template>
                         </el-table-column>
@@ -44,7 +45,7 @@
                         <el-table-column width="68px">
                             <template slot-scope="props" >
                                 <el-tooltip class="item" effect="dark" content="Excluir" placement="top">
-                                    <el-button type="danger" plain style="float: right;" @click="removerConteudo(props.row.id)"><i class="el-icon-delete"></i></el-button>
+                                    <el-button type="danger" plain style="float: right;" @click="remove(props.row)"><i class="el-icon-delete"></i></el-button>
                                 </el-tooltip>
                             </template>
                         </el-table-column>
@@ -56,29 +57,49 @@
 </template>
 
 <script>
+/* Services */
+import ConteudoService from "../../../domain/service/ConteudoService";
+
 export default {
-    data() {
-      return {
-        conteudos: [{
-          id: 1,
-          titulo: 'Camada 7 do sistema OSI',
-          descricao: 'Descrição de um conteúdo legal',
-          disciplina: 'Rede de computadores',
-          bimestre: 1,
-        }, {
-          id: 2,
-          titulo: 'Camada 5 do sistema OSI',
-          descricao: 'Descrição de um conteúdo legal 2',
-          disciplina: 'Rede de computadores 2',
-          bimestre: 2,
-        }]
-      }
+    data(){
+        return {
+            conteudos: []
+        }
     },
-    methods:{
-        removerConteudo(id){
-            console.log(id)
-            var index = this.conteudos.indexOf(this.conteudos.filter(c => c.id == id));
-            this.conteudos.splice(index, 1)
+    created(){
+        this.service = new ConteudoService(this.$resource);
+        this.service.findAll().then(response => {
+            console.log(response)
+            if(response.status == 200){
+                this.conteudos = response.body.conteudos
+            }
+        }).catch( erro => {
+            console.log(erro)
+        })
+    },
+    methods:{   
+        remove(conteudo){
+            console.log(conteudo)
+            this.$confirm('Isso fará com que o conteudo seja deletado permanentemente. Continuar?', 'Atenção', {
+                confirmButtonText: 'Deletar',
+                cancelButtonText: 'Cancelar',
+                type: 'warning'
+            }).then(() => {
+                this.delete(conteudo)
+            })
+        },
+        delete(conteudo){
+            this.service = new ConteudoService(this.$resource);
+            this.service.delete({}, conteudo).then(response => {
+                if(response.status == 200){
+                    this.$root.success(response.body.message)
+                    var index = this.conteudos.indexOf(this.conteudos.filter(d => d.id == conteudo.id));
+                    this.conteudos.splice(index, 1)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
         }
     }
 }

@@ -32,9 +32,8 @@
                     <el-row type="flex" class="row-bg" :gutter="20">
                         <el-col :span="6">
                             <label style="display: block;">Disciplina</label>
-                            <el-select v-model="conteudo.disciplina" placeholder="Disciplina">
-                                <el-option value="Rede de computadores">Rede de computadores</el-option>
-                                <el-option value="Sistemas operacionais">Sistemas operacionais</el-option>
+                            <el-select v-model="conteudo.idDisciplina" placeholder="Curso">
+                                <el-option v-for="disciplina in disciplinas" :key="disciplina.id" :value="disciplina.id" :label="disciplina.descricao">{{disciplina.descricao}}</el-option>
                             </el-select>
                         </el-col>
                         <el-col :span="6">
@@ -46,8 +45,10 @@
                         </el-col>
                     </el-row> 
                     <el-row>
-                        <el-button type="info" plain>Cancelar</el-button>
-                        <el-button type="success" plain>Salvar</el-button>
+                        <router-link :to="{ name: 'Conteudos'}">
+                            <el-button type="info" plain>Cancelar</el-button>
+                        </router-link>
+                        <el-button type="success" plain @click="save(conteudo)">Salvar</el-button>
                     </el-row>   
                 </el-row>
             </div>
@@ -56,17 +57,80 @@
 </template>
 
 <script>
+/* Services */
+import ConteudoService from "../../../domain/service/ConteudoService";
+import DisciplinaService from "../../../domain/service/DisciplinaService";
+/* Models */
+import Conteudo from "../../../domain/model/Conteudo";
+
 export default {
     data(){
         return{
-            conteudo:{
-                titulo: '',
-                descricao: '',
-                disciplina: '',
-                bimestre: 1,
-            },
+            conteudo: new Conteudo(),
+            disciplinas: [],
         }
     },
+    created() {
+        this.findDisciplinas()
+        if(this.$route.params.id){
+            this.findById(this.$route.params.id)
+        }
+    },
+    methods:{
+        save(conteudo){
+            this.service = new ConteudoService(this.$resource);
+            this.conteudo.idProfessor = 1 //MUDAR PARA ACEITAR O LOGIN
+            if( conteudo.id ){
+                this.service.update({}, conteudo).then(response => {
+                    if(response.status == 200){
+                        this.$root.success(response.body.message)
+                        this.conteudo = new Conteudo()
+                    } else {
+                        this.$root.error(response.body.message)
+                    }
+                }).catch( erro => {
+                    this.$root.error()
+                    console.log(erro)
+                })
+            }else{
+                this.service.insert({}, conteudo).then(response => {
+                    if(response.status == 200){
+                        this.$root.success(response.body.message)
+                        this.conteudo = new Conteudo()
+                    } else {
+                        this.$root.error(response.body.message)
+                    }
+                }).catch( erro => {
+                    this.$root.error()
+                    console.log(erro)
+                })
+            }
+        },
+        findById(id){
+            this.service = new ConteudoService(this.$resource);
+            this.service.findById({id: id}).then(response => {
+                console.log(response)
+                if(response.status == 200){
+                    this.conteudo = response.body.conteudo
+                } else {
+                    this.$root.error(response.body.message)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
+        },
+        findDisciplinas(){
+            this.service = new DisciplinaService(this.$resource);
+            this.service.findAll().then(response => {
+                if(response.status == 200){
+                    this.disciplinas = response.body.disciplinas
+                }
+            }).catch( erro => {
+                console.log(erro)
+            })   
+        }
+    }
 }
 </script>
 

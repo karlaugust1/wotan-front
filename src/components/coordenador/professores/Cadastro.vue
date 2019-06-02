@@ -36,13 +36,15 @@
                         </el-col>
                         <el-col :span="6">
                             <label style="display: block;">Data de nascimento</label>
-                            <el-date-picker v-model="professor.dataNascimento" type="date" placeholder="Escolha uma data">
+                            <el-date-picker v-model="professor.dataNascimento" type="date" placeholder="Escolha uma data" format="dd/MM/yyyy" >
                             </el-date-picker>
                         </el-col>
                     </el-row> 
                     <el-row>
-                        <el-button type="info" plain>Cancelar</el-button>
-                        <el-button type="success" plain>Salvar</el-button>
+                        <router-link :to="{ name: 'Professores'}">
+                            <el-button type="info" plain>Cancelar</el-button>
+                        </router-link>
+                        <el-button type="success" plain @click="save(professor)">Salvar</el-button>
                     </el-row>   
                 </el-row>
             </div>
@@ -51,17 +53,68 @@
 </template>
 
 <script>
+/* Services */
+import ProfessorService from "../../../domain/service/ProfessorService";
+/* Models */
+import Professor from "../../../domain/model/Professor";
+
 export default {
     data(){
         return{
-            professor:{
-                nome: '',
-                cpf: '',
-                rg: '',
-                dataNascimento: '',
-            },
+            professor: new Professor(),
         }
     },
+    created() {
+        if(this.$route.params.id){
+            this.findById(this.$route.params.id)
+        }
+    },
+    methods:{
+        save(professor){
+            console.log(professor)
+            this.service = new ProfessorService(this.$resource);
+            if( professor.id ){
+                this.service.update({}, professor).then(response => {
+                    if(response.status == 200){
+                        this.$root.success(response.body.message)
+                        this.professor = new Professor()
+                    } else {
+                        this.$root.error(response.body.message)
+                    }
+                }).catch( erro => {
+                    this.$root.error()
+                    console.log(erro)
+                })
+            }else{
+                this.service.insert({}, professor).then(response => {
+                    console.log(response)
+                    if(response.status == 200){
+                        this.$root.success(response.body.message)
+                        this.professor = new Professor()
+                    } else {
+                        this.$root.error(response.body.message)
+                    }
+                }).catch( erro => {
+                    this.$root.error()
+                    console.log(erro)
+                })
+            }
+        },
+        findById(id){
+            this.service = new ProfessorService(this.$resource);
+            this.service.findById({id: id}).then(response => {
+                console.log(response)
+                if(response.status == 200){
+                    this.professor = response.body.professor
+                } else {
+                    this.$root.error(response.body.message)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
+        },
+    }
 }
 </script>
 

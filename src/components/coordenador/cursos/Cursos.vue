@@ -24,7 +24,7 @@
                         :data="cursos"
                         empty-text="Sem cursos, até o momento :'("
                         style="width: 100%">
-                        <el-table-column label="Nome" prop="descricao"></el-table-column>
+                        <el-table-column label="Nome" prop="nome"></el-table-column>
                         <el-table-column width="68px">
                             <template slot-scope="props" >
                                 <router-link :to="{ name: 'CursosEdicao', params:{ id: props.row.id }}">
@@ -37,7 +37,7 @@
                         <el-table-column width="68px">
                             <template slot-scope="props" >
                                 <el-tooltip class="item" effect="dark" content="Excluir" placement="top">
-                                    <el-button type="danger" plain style="float: right;" @click="removerCurso(props.row.id)"><i class="el-icon-delete"></i></el-button>
+                                    <el-button type="danger" plain style="float: right;" @click="remove(props.row)"><i class="el-icon-delete"></i></el-button>
                                 </el-tooltip>
                             </template>
                         </el-table-column>
@@ -49,19 +49,49 @@
 </template>
 
 <script>
+/* Services */
+import CursoService from "../../../domain/service/CursoService";
+
 export default {
     data(){
         return {
-            cursos: [{
-                id: 1,
-                descricao: 'Suicídio em coletivo',
-            }]
+            cursos: []
         }
     },
+    created(){
+        this.service = new CursoService(this.$resource);
+        this.service.findAll().then(response => {
+            console.log(response)
+            if(response.status == 200){
+                this.cursos = response.body.cursos
+            }
+        }).catch( erro => {
+            console.log(erro)
+        })  
+    },
     methods:{   
-        removerCurso(id){
-            var index = this.cursos.indexOf(this.cursos.filter(c => c.id == id));
-            this.cursos.splice(index, 1)
+        remove(curso){
+            console.log(curso)
+            this.$confirm('Isso fará com que o curso seja deletado permanentemente. Continuar?', 'Atenção', {
+                confirmButtonText: 'Deletar',
+                cancelButtonText: 'Cancelar',
+                type: 'warning'
+            }).then(() => {
+                this.delete(curso)
+            })
+        },
+        delete(curso){
+            this.service = new CursoService(this.$resource);
+            this.service.delete({}, curso).then(response => {
+                if(response.status == 200){
+                    this.$root.success(response.body.message)
+                    var index = this.cursos.indexOf(this.cursos.filter(c => c.id == curso.id));
+                    this.cursos.splice(index, 1)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
         }
     }
 }

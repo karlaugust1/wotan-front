@@ -26,14 +26,12 @@
                         style="width: 100%">
                         <el-table-column type="expand">
                             <template slot-scope="props">
-                                <p>Alternativa 1: {{ props.row.alternativa1 }}</p>
-                                <p>Alternativa 2: {{ props.row.alternativa2 }}</p>
-                                <p>Alternativa 3: {{ props.row.alternativa3 }}</p>
-                                <p>Alternativa 4: {{ props.row.alternativa4 }}</p>
+                                <p v-for="(alternativa, index) in props.row.alternativas" :key="alternativa.id" :class="alternativa.correta? 'text-color-green' : ''">Alternativa {{index + 1}}: {{ alternativa.descricao }}</p>
                             </template>
                         </el-table-column>
-                        <el-table-column label="Pergunta" prop="pergunta"></el-table-column>
-                        <el-table-column label="Data" prop="data" width="150px"></el-table-column>
+                        <el-table-column label="Pergunta" prop="descricao"></el-table-column>
+                        <el-table-column label="Data criação" prop="dataCriacao" width="150px"></el-table-column>
+                        <el-table-column label="Data limite" prop="dataLimite" width="150px"></el-table-column>
                         <el-table-column width="68px">
                             <template slot-scope="props" >
                                 <router-link :to="{ name: 'PerguntasEdicao', params:{ id: props.row.id }}">
@@ -46,7 +44,7 @@
                         <el-table-column width="68px">
                             <template slot-scope="props" >
                                 <el-tooltip class="item" effect="dark" content="Excluir" placement="top">
-                                    <el-button type="danger" plain style="float: right;" @click="removerPergunta(props.row.id)"><i class="el-icon-delete"></i></el-button>
+                                    <el-button type="danger" plain style="float: right;" @click="remove(props.row)"><i class="el-icon-delete"></i></el-button>
                                 </el-tooltip>
                             </template>
                         </el-table-column>
@@ -58,32 +56,49 @@
 </template>
 
 <script>
+/* Services */
+import PerguntaService from "../../../domain/service/PerguntaService";
+
 export default {
-    data() {
-      return {
-        perguntas: [{
-          id: 1,
-          pergunta: 'Como faz para utilizar um cabo de rede para invocar o capeta?',
-          data: '2016-05-03',
-          alternativa1: 'Procure no Google',
-          alternativa2: 'Procure no Reddit',
-          alternativa3: 'Procure no Bing',
-          alternativa4: 'Chama o Gouvea',
-        }, {
-          id: 2,
-          pergunta: 'Se eu cortar meu pau, cresce outro no mesmo lugar?',
-          data: '2016-05-03',
-          alternativa1: 'Sim',
-          alternativa2: 'Não',
-          alternativa3: 'Talvez',
-          alternativa4: 'Todas as alternativas',
-        }]
-      }
+    data(){
+        return {
+            perguntas: [],
+        }
     },
-    methods:{
-        removerPergunta(id){
-            var index = this.perguntas.indexOf(this.perguntas.filter(p => p.id == id));
-            this.perguntas.splice(index, 1)
+    created(){
+        this.service = new PerguntaService(this.$resource);
+        this.service.findByTeacher({id: 1}).then(response => {
+            console.log(response)
+            if(response.status == 200){
+                this.perguntas = response.body.perguntas
+            }
+        }).catch( erro => {
+            console.log(erro)
+        })
+    },
+    methods:{   
+        remove(pergunta){
+            console.log(pergunta)
+            this.$confirm('Isso fará com que a pergunta seja deletada permanentemente. Continuar?', 'Atenção', {
+                confirmButtonText: 'Deletar',
+                cancelButtonText: 'Cancelar',
+                type: 'warning'
+            }).then(() => {
+                this.delete(pergunta)
+            })
+        },
+        delete(pergunta){
+            this.service = new PerguntaService(this.$resource);
+            this.service.delete({}, pergunta.id).then(response => {
+                if(response.status == 200){
+                    this.$root.success(response.body.message)
+                    var index = this.perguntas.indexOf(this.perguntas.filter(d => d.id == pergunta.id));
+                    this.perguntas.splice(index, 1)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
         }
     }
 }

@@ -28,14 +28,15 @@
                     </el-row>
                     <el-row class="row-bg">
                         <label style="display: block;">Curso</label>
-                        <el-select v-model="disciplina.curso" placeholder="Curso">
-                            <el-option value="Analise de sistemas">Analise de sistemas</el-option>
-                            <el-option value="Sistemas de informação">Sistemas de informação</el-option>
+                        <el-select v-model="disciplina.idCurso" placeholder="Curso">
+                            <el-option v-for="curso in cursos" :key="curso.id" :value="curso.id" :label="curso.nome">{{curso.nome}}</el-option>
                         </el-select>
                     </el-row>
                     <el-row>
-                        <el-button type="info" plain>Cancelar</el-button>
-                        <el-button type="success" plain>Salvar</el-button>
+                        <router-link :to="{ name: 'Disciplinas'}">
+                            <el-button type="info" plain>Cancelar</el-button>
+                        </router-link>
+                        <el-button type="success" plain @click="save(disciplina)">Salvar</el-button>
                     </el-row> 
                 </el-row>
             </div>
@@ -44,13 +45,77 @@
 </template>
 
 <script>
+/* Services */
+import DisciplinaService from "../../../../domain/service/DisciplinaService";
+import CursoService from "../../../../domain/service/CursoService";
+/* Models */
+import Disciplina from "../../../../domain/model/Disciplina";
+
 export default {
     data(){
         return{
-            disciplina:{
-                descricao: '',
-                curso: ''
-            },
+            disciplina: new Disciplina(),
+            cursos: []
+        }
+    },
+    created() {
+        this.findCourses()
+        if(this.$route.params.id){
+            this.findById(this.$route.params.id)
+        }
+    },
+    methods:{
+        save(disciplina){
+            this.service = new DisciplinaService(this.$resource);
+            if( disciplina.id ){
+                this.service.update({}, disciplina).then(response => {
+                    if(response.status == 200){
+                        this.$root.success(response.body.message)
+                        this.disciplina = new Disciplina()
+                    } else {
+                        this.$root.error(response.body.message)
+                    }
+                }).catch( erro => {
+                    this.$root.error()
+                    console.log(erro)
+                })
+            }else{
+                this.service.insert({}, disciplina).then(response => {
+                    if(response.status == 200){
+                        this.$root.success(response.body.message)
+                        this.disciplina = new Disciplina()
+                    } else {
+                        this.$root.error(response.body.message)
+                    }
+                }).catch( erro => {
+                    this.$root.error()
+                    console.log(erro)
+                })
+            }
+        },
+        findById(id){
+            this.service = new DisciplinaService(this.$resource);
+            this.service.findById({id: id}).then(response => {
+                console.log(response)
+                if(response.status == 200){
+                    this.disciplina = response.body.disciplina
+                } else {
+                    this.$root.error(response.body.message)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
+        },
+        findCourses(){
+            this.service = new CursoService(this.$resource);
+            this.service.findAll().then(response => {
+                if(response.status == 200){
+                    this.cursos = response.body.cursos
+                }
+            }).catch( erro => {
+                console.log(erro)
+            })   
         }
     }
 }

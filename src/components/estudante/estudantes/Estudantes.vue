@@ -45,7 +45,7 @@
                         <el-table-column width="68px">
                             <template slot-scope="props" >
                                 <el-tooltip class="item" effect="dark" content="Excluir" placement="top">
-                                    <el-button type="danger" plain style="float: right;" @click="removerEstudante(props.row.id)"><i class="el-icon-delete"></i></el-button>
+                                    <el-button type="danger" plain style="float: right;" @click="remove(props.row)"><i class="el-icon-delete"></i></el-button>
                                 </el-tooltip>
                             </template>
                         </el-table-column>
@@ -56,31 +56,52 @@
     </el-row>
 </template>
 <script>
+/* Services */
+import EstudanteService from '../../../domain/service/EstudanteService';
+
 export default {
     data(){
         return {
-            estudantes: [{
-                id: 1,
-                nome: 'Vinicius Hein Pessoal',
-                matricula: 2017000450,
-                dataMatricula: '2019-04-20',
-                disciplinas: [{
-                    descricao: 'Suicídio em coletivo',
-                },{
-                    descricao: 'Matemática financeira'
-                }
-
-                ]
-            }]
+            estudantes: []
         }
     },
-    methods:{
-        removerEstudante(id){
-            var index = this.estudantes.indexOf(this.estudantes.filter(e => e.id == id));
-            this.estudantes.splice(index, 1)
+    created(){
+        this.service = new EstudanteService(this.$resource);
+        this.service.findAll().then(response => {
+            console.log(response)
+            if(response.status == 200){
+                this.estudantes = response.body.estudantes
+            }
+        }).catch( erro => {
+            console.log(erro)
+        })  
+    },
+    methods:{   
+        remove(estudante){
+            estudante.dataMatricula = new Date()
+            estudante.dataNascimento = new Date()
+            this.$confirm('Isso fará com que o estudante seja deletado permanentemente. Continuar?', 'Atenção', {
+                confirmButtonText: 'Deletar',
+                cancelButtonText: 'Cancelar',
+                type: 'warning'
+            }).then(() => {
+                this.delete(estudante)
+            })
+        },
+        delete(estudante){
+            this.service = new EstudanteService(this.$resource);
+            this.service.delete({}, estudante).then(response => {
+                if(response.status == 200){
+                    this.$root.success(response.body.message)
+                    var index = this.estudantes.indexOf(this.estudantes.filter(e => e.id == estudante.id));
+                    this.estudantes.splice(index, 1)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
         }
     }
-
 }
 </script>
 

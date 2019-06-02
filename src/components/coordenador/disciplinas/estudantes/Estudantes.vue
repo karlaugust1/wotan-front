@@ -58,28 +58,27 @@
 </template>
 
 <script>
+/* Services */
+import DisciplinaService from "../../../../domain/service/DisciplinaService";
+
 export default {
     data(){
         return {
-            disciplinas: [{
-                id: 1,
-                descricao: 'Rede de computadores',
-                curso: 'Analise de sistemas',
-                estudantes: [{
-                    id: 1,
-                    nome: 'Vinicius Hein Pessoal',
-                    matricula: 2017000451,
-                    dataMatricula: '2019-04-20',
-                },{
-                    id: 2,
-                    nome: 'Karl August Harder',
-                    matricula: 2017000450,
-                    dataMatricula: '2019-04-22',
-                }]
-            }],
+            disciplinas: [],
             search: ''
         }
     },
+    created(){
+        this.service = new DisciplinaService(this.$resource);
+        this.service.findAll().then(response => {
+            console.log(response)
+            if(response.status == 200){
+                this.disciplinas = response.body.disciplinas
+            }
+        }).catch( erro => {
+            console.log(erro)
+        })
+    },  
 }
 </script>
 

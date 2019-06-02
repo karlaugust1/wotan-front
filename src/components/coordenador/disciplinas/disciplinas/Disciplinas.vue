@@ -39,7 +39,7 @@
                         <el-table-column width="68px">
                             <template slot-scope="props" >
                                 <el-tooltip class="item" effect="dark" content="Excluir" placement="top">
-                                    <el-button type="danger" plain style="float: right;" @click="removerDisciplina(props.row.id)"><i class="el-icon-delete"></i></el-button>
+                                    <el-button type="danger" plain style="float: right;" @click="remove(props.row)"><i class="el-icon-delete"></i></el-button>
                                 </el-tooltip>
                             </template>
                         </el-table-column>
@@ -51,20 +51,49 @@
 </template>
 
 <script>
+/* Services */
+import DisciplinaService from "../../../../domain/service/DisciplinaService";
+
 export default {
     data(){
         return {
-            disciplinas: [{
-                id: 1,
-                descricao: 'Rede de computadores',
-                curso: 'Analise de sistemas'
-            }]
+            disciplinas: []
         }
     },
-    methods:{
-        removerDisciplina(id){
-            var index = this.disciplinas.indexOf(this.disciplinas.filter(d => d.id == id));
-            this.disciplinas.splice(index, 1)
+    created(){
+        this.service = new DisciplinaService(this.$resource);
+        this.service.findAll().then(response => {
+            console.log(response)
+            if(response.status == 200){
+                this.disciplinas = response.body.disciplinas
+            }
+        }).catch( erro => {
+            console.log(erro)
+        })
+    },
+    methods:{   
+        remove(disciplina){
+            console.log(disciplina)
+            this.$confirm('Isso fará com que a disciplina seja deletada permanentemente. Continuar?', 'Atenção', {
+                confirmButtonText: 'Deletar',
+                cancelButtonText: 'Cancelar',
+                type: 'warning'
+            }).then(() => {
+                this.delete(disciplina)
+            })
+        },
+        delete(disciplina){
+            this.service = new DisciplinaService(this.$resource);
+            this.service.delete({}, disciplina).then(response => {
+                if(response.status == 200){
+                    this.$root.success(response.body.message)
+                    var index = this.disciplinas.indexOf(this.disciplinas.filter(d => d.id == disciplina.id));
+                    this.disciplinas.splice(index, 1)
+                }
+            }).catch( erro => {
+                this.$root.error()
+                console.log(erro)
+            })
         }
     }
 }
